@@ -9,7 +9,7 @@
 - **前端**: Next.js 16 (App Router) + React 19 + TypeScript 5
 - **可视化**: ECharts (echarts-for-react)
 - **UI组件**: shadcn/ui + Tailwind CSS 4
-- **后端**: Python FastAPI (独立端口 8000)
+- **后端**: Python FastAPI (端口 8000)
 
 ## 目录结构
 ```
@@ -23,27 +23,29 @@
 │   │   ├── page.tsx        # 主仪表盘页面
 │   │   ├── layout.tsx      # 页面布局
 │   │   └── globals.css     # 全局样式
-│   └── components/ui/      # shadcn/ui 组件库
-├── DESIGN.md               # 设计规范文档
-└── AGENTS.md               # 本文件
+│   ├── components/ui/      # shadcn/ui 组件库
+│   └── lib/utils.ts        # 工具函数
+├── scripts/                # 构建脚本
+├── public/                 # 静态资源
+└── .coze                   # Coze 部署配置
 ```
 
 ## 包管理规范
-- 前端：仅使用 **pnpm**
-- 后端：使用 pip 或 pip3 安装 Python 依赖
+- 前端：**pnpm** (强制)
+- 后端：pip install -r requirements.txt
 
-## 运行方式
+## 启动方式
 
 ### 启动后端服务
 ```bash
-cd backend
-pip install -r requirements.txt
+cd /workspace/projects/backend
 python app.py
 # 服务运行在 http://localhost:8000
 ```
 
 ### 启动前端服务
 ```bash
+cd /workspace/projects
 pnpm run dev
 # 服务运行在 http://localhost:5000
 ```
@@ -79,3 +81,4 @@ pnpm run dev
 - 前端需要后端服务启动才能正常显示数据
 - API 地址: http://localhost:8000
 - 前端地址: http://localhost:5000
+- CORS 已配置允许跨域访问

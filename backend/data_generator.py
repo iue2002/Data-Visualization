@@ -137,22 +137,49 @@ class SalesDataGenerator:
         
         print(f"数据生成完成，共 {len(self.daily_data)} 条记录")
     
-    def get_summary(self) -> Dict[str, Any]:
-        """获取汇总数据"""
-        total_sales = sum(item["sales"] for item in self.daily_data)
-        total_profit = sum(item["profit"] for item in self.daily_data)
-        total_orders = sum(item["orders"] for item in self.daily_data)
+    def get_summary(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None) -> Dict[str, Any]:
+        """获取汇总数据（支持筛选）"""
+        filtered_data = self.daily_data
+        
+        # 日期过滤
+        if start_date or end_date:
+            filtered_data = [
+                item for item in filtered_data
+                if (not start_date or item["date"] >= start_date)
+                and (not end_date or item["date"] <= end_date)
+            ]
+        
+        # 区域过滤
+        if region:
+            filtered_data = [item for item in filtered_data if item["region"] == region]
+        
+        # 品类过滤
+        if category:
+            filtered_data = [item for item in filtered_data if item["category"] == category]
+        
+        total_sales = sum(item["sales"] for item in filtered_data)
+        total_profit = sum(item["profit"] for item in filtered_data)
+        total_orders = sum(item["orders"] for item in filtered_data)
         avg_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0
+        
+        # 计算实际日期范围
+        if filtered_data:
+            dates = [item["date"] for item in filtered_data]
+            actual_start = min(dates)
+            actual_end = max(dates)
+        else:
+            actual_start = self.start_date.strftime("%Y-%m-%d")
+            actual_end = datetime.now().strftime("%Y-%m-%d")
         
         return {
             "total_sales": round(total_sales, 2),
             "total_profit": round(total_profit, 2),
             "total_orders": total_orders,
             "avg_margin": round(avg_margin, 2),
-            "record_count": len(self.daily_data),
+            "record_count": len(filtered_data),
             "date_range": {
-                "start": self.start_date.strftime("%Y-%m-%d"),
-                "end": datetime.now().strftime("%Y-%m-%d")
+                "start": actual_start,
+                "end": actual_end
             }
         }
     

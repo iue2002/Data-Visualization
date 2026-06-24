@@ -12,9 +12,20 @@ router = APIRouter()
 
 
 @router.get("/api/summary")
-async def get_summary():
+async def get_summary(
+    start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选")
+):
     """
-    获取销售数据汇总
+    获取销售数据汇总（支持筛选）
+    
+    参数:
+        - start_date: 开始日期（可选）
+        - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
     
     返回:
         - total_sales: 总销售额
@@ -25,7 +36,7 @@ async def get_summary():
         - date_range: 日期范围
     """
     generator = get_generator()
-    return generator.get_summary()
+    return generator.get_summary(start_date, end_date, region, category)
 
 
 @router.get("/api/trend")

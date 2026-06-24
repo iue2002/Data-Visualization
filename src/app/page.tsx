@@ -151,15 +151,21 @@ export default function DashboardPage() {
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<string>("desc");
 
-  // API 基础地址
-  const API_BASE = "http://localhost:8000";
+  // API 基础地址 - 使用相对路径代理
+  const API_BASE = "";
 
   // ==================== 数据获取 ====================
 
   // 获取汇总数据
-  const fetchSummary = useCallback(async () => {
+  const fetchSummary = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
     try {
-      const response = await fetch(`${API_BASE}/api/summary`);
+      const params = new URLSearchParams();
+      if (start) params.append("start_date", start);
+      if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
+      
+      const response = await fetch(`${API_BASE}/api/proxy/summary?${params.toString()}`);
       if (!response.ok) throw new Error("获取汇总数据失败");
       const data = await response.json();
       setSummary(data);
@@ -175,7 +181,7 @@ export default function DashboardPage() {
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
       
-      const response = await fetch(`${API_BASE}/api/trend?${params.toString()}`);
+      const response = await fetch(`${API_BASE}/api/proxy/trend?${params.toString()}`);
       if (!response.ok) throw new Error("获取趋势数据失败");
       const data = await response.json();
       setTrendData(data);
@@ -191,7 +197,7 @@ export default function DashboardPage() {
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
       
-      const response = await fetch(`${API_BASE}/api/region?${params.toString()}`);
+      const response = await fetch(`${API_BASE}/api/proxy/region?${params.toString()}`);
       if (!response.ok) throw new Error("获取区域数据失败");
       const data = await response.json();
       setRegionData(data);
@@ -207,7 +213,7 @@ export default function DashboardPage() {
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
       
-      const response = await fetch(`${API_BASE}/api/category?${params.toString()}`);
+      const response = await fetch(`${API_BASE}/api/proxy/category?${params.toString()}`);
       if (!response.ok) throw new Error("获取品类数据失败");
       const data = await response.json();
       setCategoryData(data);
@@ -223,7 +229,7 @@ export default function DashboardPage() {
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
       
-      const response = await fetch(`${API_BASE}/api/city-ranking?${params.toString()}`);
+      const response = await fetch(`${API_BASE}/api/proxy/city-ranking?${params.toString()}`);
       if (!response.ok) throw new Error("获取城市排名失败");
       const data = await response.json();
       setCityRanking(data);
@@ -253,7 +259,7 @@ export default function DashboardPage() {
       if (sortBy) params.append("sort_by", sortBy);
       if (sortOrder) params.append("sort_order", sortOrder);
       
-      const response = await fetch(`${API_BASE}/api/data?${params.toString()}`);
+      const response = await fetch(`${API_BASE}/api/proxy/data?${params.toString()}`);
       if (!response.ok) throw new Error("获取明细数据失败");
       const data = await response.json();
       setDetailData(data.data);
@@ -266,7 +272,7 @@ export default function DashboardPage() {
   // 获取筛选器选项
   const fetchFilters = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/filters`);
+      const response = await fetch(`${API_BASE}/api/proxy/filters`);
       if (!response.ok) throw new Error("获取筛选器失败");
       const data = await response.json();
       setFilters(data);
@@ -310,6 +316,7 @@ export default function DashboardPage() {
       const start = startDate || filters.date_range.start;
       const end = endDate || filters.date_range.end;
       
+      fetchSummary(start, end, selectedRegion, selectedCategory);
       fetchTrendData(start, end);
       fetchRegionData(start, end);
       fetchCategoryData(start, end);
