@@ -175,11 +175,13 @@ export default function DashboardPage() {
   }, []);
 
   // 获取趋势数据
-  const fetchTrendData = useCallback(async (start?: string, end?: string) => {
+  const fetchTrendData = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
     try {
       const params = new URLSearchParams();
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
       
       const response = await fetch(`${API_BASE}/api/proxy/trend?${params.toString()}`);
       if (!response.ok) throw new Error("获取趋势数据失败");
@@ -191,11 +193,13 @@ export default function DashboardPage() {
   }, []);
 
   // 获取区域数据
-  const fetchRegionData = useCallback(async (start?: string, end?: string) => {
+  const fetchRegionData = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
     try {
       const params = new URLSearchParams();
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
       
       const response = await fetch(`${API_BASE}/api/proxy/region?${params.toString()}`);
       if (!response.ok) throw new Error("获取区域数据失败");
@@ -207,11 +211,13 @@ export default function DashboardPage() {
   }, []);
 
   // 获取品类数据
-  const fetchCategoryData = useCallback(async (start?: string, end?: string) => {
+  const fetchCategoryData = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
     try {
       const params = new URLSearchParams();
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
       
       const response = await fetch(`${API_BASE}/api/proxy/category?${params.toString()}`);
       if (!response.ok) throw new Error("获取品类数据失败");
@@ -223,11 +229,13 @@ export default function DashboardPage() {
   }, []);
 
   // 获取城市排名
-  const fetchCityRanking = useCallback(async (start?: string, end?: string) => {
+  const fetchCityRanking = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
     try {
       const params = new URLSearchParams();
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
       
       const response = await fetch(`${API_BASE}/api/proxy/city-ranking?${params.toString()}`);
       if (!response.ok) throw new Error("获取城市排名失败");
@@ -317,10 +325,10 @@ export default function DashboardPage() {
       const end = endDate || filters.date_range.end;
       
       fetchSummary(start, end, selectedRegion, selectedCategory);
-      fetchTrendData(start, end);
-      fetchRegionData(start, end);
-      fetchCategoryData(start, end);
-      fetchCityRanking(start, end);
+      fetchTrendData(start, end, selectedRegion, selectedCategory);
+      fetchRegionData(start, end, selectedRegion, selectedCategory);
+      fetchCategoryData(start, end, selectedRegion, selectedCategory);
+      fetchCityRanking(start, end, selectedRegion, selectedCategory);
       fetchDetailData(1, start, end, selectedRegion, selectedCategory, sortBy, sortOrder);
     }
   }, [startDate, endDate, selectedRegion, selectedCategory]);

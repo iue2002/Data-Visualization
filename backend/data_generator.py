@@ -183,9 +183,8 @@ class SalesDataGenerator:
             }
         }
     
-    def get_trend_data(self, start_date: str = None, end_date: str = None) -> List[Dict]:
-        """获取趋势数据（按日期聚合）"""
-        # 按日期分组聚合
+    def get_trend_data(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None) -> List[Dict]:
+        """获取趋势数据（按日期聚合，支持筛选）"""
         date_map = {}
         
         for item in self.daily_data:
@@ -195,6 +194,14 @@ class SalesDataGenerator:
             if start_date and date < start_date:
                 continue
             if end_date and date > end_date:
+                continue
+            
+            # 区域过滤
+            if region and item["region"] != region:
+                continue
+            
+            # 品类过滤
+            if category and item["category"] != category:
                 continue
             
             if date not in date_map:
@@ -219,8 +226,8 @@ class SalesDataGenerator:
         
         return result
     
-    def get_region_data(self, start_date: str = None, end_date: str = None) -> List[Dict]:
-        """获取区域销售数据"""
+    def get_region_data(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None) -> List[Dict]:
+        """获取区域销售数据（支持筛选）"""
         region_map = {}
         
         for item in self.daily_data:
@@ -230,27 +237,35 @@ class SalesDataGenerator:
             if end_date and item["date"] > end_date:
                 continue
             
-            region = item["region"]
+            # 区域过滤
+            if region and item["region"] != region:
+                continue
             
-            if region not in region_map:
-                region_map[region] = {
-                    "region": region,
+            # 品类过滤
+            if category and item["category"] != category:
+                continue
+            
+            reg = item["region"]
+            
+            if reg not in region_map:
+                region_map[reg] = {
+                    "region": reg,
                     "sales": 0,
                     "profit": 0,
                     "orders": 0,
                     "cities": set()
                 }
             
-            region_map[region]["sales"] += item["sales"]
-            region_map[region]["profit"] += item["profit"]
-            region_map[region]["orders"] += item["orders"]
-            region_map[region]["cities"].add(item["city"])
+            region_map[reg]["sales"] += item["sales"]
+            region_map[reg]["profit"] += item["profit"]
+            region_map[reg]["orders"] += item["orders"]
+            region_map[reg]["cities"].add(item["city"])
         
         # 转换为列表并格式化
         result = []
-        for region, data in region_map.items():
+        for reg, data in region_map.items():
             result.append({
-                "region": region,
+                "region": reg,
                 "sales": round(data["sales"], 2),
                 "profit": round(data["profit"], 2),
                 "orders": data["orders"],
@@ -262,8 +277,8 @@ class SalesDataGenerator:
         
         return result
     
-    def get_category_data(self, start_date: str = None, end_date: str = None) -> List[Dict]:
-        """获取品类销售数据"""
+    def get_category_data(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None) -> List[Dict]:
+        """获取品类销售数据（支持筛选）"""
         category_map = {}
         
         for item in self.daily_data:
@@ -273,25 +288,33 @@ class SalesDataGenerator:
             if end_date and item["date"] > end_date:
                 continue
             
-            category = item["category"]
+            # 区域过滤
+            if region and item["region"] != region:
+                continue
             
-            if category not in category_map:
-                category_map[category] = {
-                    "category": category,
+            # 品类过滤
+            if category and item["category"] != category:
+                continue
+            
+            cat = item["category"]
+            
+            if cat not in category_map:
+                category_map[cat] = {
+                    "category": cat,
                     "sales": 0,
                     "profit": 0,
                     "orders": 0
                 }
             
-            category_map[category]["sales"] += item["sales"]
-            category_map[category]["profit"] += item["profit"]
-            category_map[category]["orders"] += item["orders"]
+            category_map[cat]["sales"] += item["sales"]
+            category_map[cat]["profit"] += item["profit"]
+            category_map[cat]["orders"] += item["orders"]
         
         # 转换为列表并格式化
         result = []
-        for category, data in category_map.items():
+        for cat, data in category_map.items():
             result.append({
-                "category": category,
+                "category": cat,
                 "sales": round(data["sales"], 2),
                 "profit": round(data["profit"], 2),
                 "orders": data["orders"]
@@ -302,8 +325,8 @@ class SalesDataGenerator:
         
         return result
     
-    def get_city_ranking(self, start_date: str = None, end_date: str = None, limit: int = 20) -> List[Dict]:
-        """获取城市销售排名"""
+    def get_city_ranking(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None, limit: int = 20) -> List[Dict]:
+        """获取城市销售排名（支持筛选）"""
         city_map = {}
         
         for item in self.daily_data:
@@ -311,6 +334,14 @@ class SalesDataGenerator:
             if start_date and item["date"] < start_date:
                 continue
             if end_date and item["date"] > end_date:
+                continue
+            
+            # 区域过滤
+            if region and item["region"] != region:
+                continue
+            
+            # 品类过滤
+            if category and item["category"] != category:
                 continue
             
             city = item["city"]

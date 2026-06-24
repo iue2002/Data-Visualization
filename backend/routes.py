@@ -42,7 +42,9 @@ async def get_summary(
 @router.get("/api/trend")
 async def get_trend(
     start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)")
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选")
 ):
     """
     获取销售趋势数据（按日期聚合）
@@ -50,18 +52,22 @@ async def get_trend(
     参数:
         - start_date: 开始日期（可选）
         - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
     
     返回:
         - 日期、销售额、利润、订单量的趋势数据列表
     """
     generator = get_generator()
-    return generator.get_trend_data(start_date, end_date)
+    return generator.get_trend_data(start_date, end_date, region, category)
 
 
 @router.get("/api/region")
 async def get_region(
     start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)")
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选")
 ):
     """
     获取区域销售数据
@@ -69,18 +75,22 @@ async def get_region(
     参数:
         - start_date: 开始日期（可选）
         - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
     
     返回:
         - 各区域的销售额、利润、订单量数据
     """
     generator = get_generator()
-    return generator.get_region_data(start_date, end_date)
+    return generator.get_region_data(start_date, end_date, region, category)
 
 
 @router.get("/api/category")
 async def get_category(
     start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)")
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选")
 ):
     """
     获取品类销售数据
@@ -88,18 +98,22 @@ async def get_category(
     参数:
         - start_date: 开始日期（可选）
         - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
     
     返回:
         - 各品类的销售额、利润、订单量数据
     """
     generator = get_generator()
-    return generator.get_category_data(start_date, end_date)
+    return generator.get_category_data(start_date, end_date, region, category)
 
 
 @router.get("/api/city-ranking")
 async def get_city_ranking(
     start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选"),
     limit: Optional[int] = Query(20, ge=1, le=50, description="返回城市数量")
 ):
     """
@@ -108,13 +122,15 @@ async def get_city_ranking(
     参数:
         - start_date: 开始日期（可选）
         - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
         - limit: 返回城市数量（默认20，最大50）
     
     返回:
         - 城市销售排名数据
     """
     generator = get_generator()
-    return generator.get_city_ranking(start_date, end_date, limit)
+    return generator.get_city_ranking(start_date, end_date, region, category, limit)
 
 
 @router.get("/api/heatmap")
