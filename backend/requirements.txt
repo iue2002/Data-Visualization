@@ -1,0 +1,13 @@
+# 企业销售数据可视化看板 - Python 依赖
+
+# FastAPI 框架
+fastapi>=0.100.0
+
+# ASGI 服务器
+uvicorn[standard]>=0.23.0
+
+# 数据处理
+numpy>=1.24.0
+
+# 数据验证
+pydantic>=2.0.0
