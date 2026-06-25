@@ -136,7 +136,9 @@ async def get_city_ranking(
 @router.get("/api/heatmap")
 async def get_heatmap(
     start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)")
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
+    region: Optional[str] = Query(None, description="区域筛选"),
+    category: Optional[str] = Query(None, description="品类筛选")
 ):
     """
     获取热力图数据（按日期+品类聚合）
@@ -144,12 +146,14 @@ async def get_heatmap(
     参数:
         - start_date: 开始日期（可选）
         - end_date: 结束日期（可选）
+        - region: 区域筛选（可选）
+        - category: 品类筛选（可选）
     
     返回:
         - 热力图数据
     """
     generator = get_generator()
-    return generator.get_heatmap_data(start_date, end_date)
+    return generator.get_heatmap_data(start_date, end_date, region, category)
 
 
 @router.get("/api/data")

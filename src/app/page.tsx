@@ -129,6 +129,7 @@ export default function DashboardPage() {
   const [categoryData, setCategoryData] = useState<CategoryItem[]>([]);
   const [cityRanking, setCityRanking] = useState<CityRankingItem[]>([]);
   const [detailData, setDetailData] = useState<DetailItem[]>([]);
+  const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     page_size: 20,
@@ -246,6 +247,24 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // 获取热力图数据
+  const fetchHeatmapData = useCallback(async (start?: string, end?: string, region?: string, category?: string) => {
+    try {
+      const params = new URLSearchParams();
+      if (start) params.append("start_date", start);
+      if (end) params.append("end_date", end);
+      if (region && region !== "all") params.append("region", region);
+      if (category && category !== "all") params.append("category", category);
+      
+      const response = await fetch(`${API_BASE}/api/proxy/heatmap?${params.toString()}`);
+      if (!response.ok) throw new Error("获取热力图数据失败");
+      const data = await response.json();
+      setHeatmapData(data);
+    } catch (err) {
+      console.error("获取热力图数据失败:", err);
+    }
+  }, []);
+
   // 获取明细数据
   const fetchDetailData = useCallback(async (
     page: number,
@@ -305,6 +324,7 @@ export default function DashboardPage() {
           fetchRegionData(),
           fetchCategoryData(),
           fetchCityRanking(),
+          fetchHeatmapData(),
           fetchDetailData(1),
         ]);
       } catch (err) {
@@ -329,6 +349,7 @@ export default function DashboardPage() {
       fetchRegionData(start, end, selectedRegion, selectedCategory);
       fetchCategoryData(start, end, selectedRegion, selectedCategory);
       fetchCityRanking(start, end, selectedRegion, selectedCategory);
+      fetchHeatmapData(start, end, selectedRegion, selectedCategory);
       fetchDetailData(1, start, end, selectedRegion, selectedCategory, sortBy, sortOrder);
     }
   }, [startDate, endDate, selectedRegion, selectedCategory]);
@@ -606,6 +627,201 @@ export default function DashboardPage() {
           },
         },
       ],
+    };
+  };
+
+  // 热力图配置
+  const getHeatmapChartOption = () => {
+    if (!heatmapData.length) return {};
+    
+    const categories = [...new Set(heatmapData.map((d: any) => d.category))];
+    const dates = [...new Set(heatmapData.map((d: any) => d.date))].sort();
+    
+    const data = heatmapData.map((d: any) => [
+      dates.indexOf(d.date),
+      categories.indexOf(d.category),
+      Math.round(d.sales / 10000)
+    ]);
+    
+    return {
+      title: {
+        text: "销售热力图（万元）",
+        left: "center",
+        textStyle: { fontSize: 16, fontWeight: "bold" },
+      },
+      tooltip: {
+        position: "top",
+        formatter: (params: any) => {
+          return `${dates[params.value[0]]}<br/>${categories[params.value[1]]}<br/>销售额: ¥${(params.value[2] * 10000).toLocaleString()}`;
+        },
+      },
+      grid: {
+        left: "8%",
+        right: "4%",
+        bottom: "15%",
+        top: "15%",
+        containLabel: true,
+      },
+      xAxis: {
+        type: "category",
+        data: dates,
+        splitArea: { show: true },
+        axisLabel: { rotate: 45, fontSize: 10, interval: 6 },
+      },
+      yAxis: {
+        type: "category",
+        data: categories,
+        splitArea: { show: true },
+      },
+      visualMap: {
+        min: 0,
+        max: Math.max(...data.map((d: any) => d[2])),
+        calculable: true,
+        orient: "horizontal",
+        left: "center",
+        bottom: "2%",
+        inRange: {
+          color: ["#f0f5ff", "#d6e4ff", "#adc6ff", "#85a5ff", "#597ef7", "#2f54eb", "#1d39c4"],
+        },
+      },
+      series: [{
+        name: "销售热力图",
+        type: "heatmap",
+        data: data,
+        label: { show: false },
+        emphasis: {
+          itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,0.5)" }
+        },
+      }],
+    };
+  };
+
+  // 堆叠面积图配置 - 品类销售趋势
+  const getStackedAreaChartOption = () => {
+    if (!heatmapData.length) return {};
+    
+    const categories = [...new Set(heatmapData.map((d: any) => d.category))];
+    const dates = [...new Set(heatmapData.map((d: any) => d.date))].sort();
+    
+    const series = categories.map((cat) => {
+      const catData = heatmapData
+        .filter((d: any) => d.category === cat)
+        .sort((a: any, b: any) => a.date.localeCompare(b.date));
+      
+      const dateMap = new Map(catData.map((d: any) => [d.date, d.sales]));
+      const values = dates.map((d) => Math.round((dateMap.get(d) || 0) / 10000));
+      
+      return {
+        name: cat,
+        type: "line",
+        stack: "total",
+        smooth: true,
+        areaStyle: { opacity: 0.6 },
+        emphasis: { focus: "series" },
+        data: values,
+      };
+    });
+    
+    const colors = ["#5B8FF9", "#61DDAA", "#F6BD16", "#E8684A", "#6DC8EC", "#9270CA"];
+    
+    return {
+      title: {
+        text: "品类销售趋势堆叠（万元）",
+        left: "center",
+        textStyle: { fontSize: 16, fontWeight: "bold" },
+      },
+      tooltip: {
+        trigger: "axis",
+        formatter: (params: any) => {
+          let html = `<b>${params[0].axisValue}</b><br/>`;
+          params.forEach((p: any) => {
+            html += `${p.marker} ${p.seriesName}: ¥${(p.value * 10000).toLocaleString()}<br/>`;
+          });
+          return html;
+        },
+      },
+      legend: {
+        data: categories,
+        bottom: 0,
+        type: "scroll",
+      },
+      grid: {
+        left: "3%",
+        right: "4%",
+        bottom: "20%",
+        top: "15%",
+        containLabel: true,
+      },
+      xAxis: {
+        type: "category",
+        data: dates,
+        axisLabel: { rotate: 45, fontSize: 10, interval: 6 },
+      },
+      yAxis: {
+        type: "value",
+        name: "万元",
+        axisLabel: { formatter: (v: number) => `${v}万` },
+      },
+      series: series.map((s, i) => ({ ...s, itemStyle: { color: colors[i % colors.length] } })),
+    };
+  };
+
+  // 雷达图配置
+  const getRadarChartOption = () => {
+    if (!regionData.length) return {};
+    
+    const indicators = [
+      { name: "销售额", max: Math.max(...regionData.map((r) => r.sales)) * 1.2 },
+      { name: "利润", max: Math.max(...regionData.map((r) => r.profit)) * 1.2 },
+      { name: "订单量", max: Math.max(...regionData.map((r) => r.orders)) * 1.2 },
+      { name: "城市数", max: Math.max(...regionData.map((r) => r.city_count)) * 1.2 },
+    ];
+    
+    const colors = ["#5B8FF9", "#61DDAA", "#F6BD16", "#E8684A", "#6DC8EC", "#9270CA", "#FF6B81"];
+    
+    const seriesData = regionData.slice(0, 7).map((r, i) => ({
+      value: [r.sales, r.profit, r.orders, r.city_count],
+      name: r.region,
+      areaStyle: { color: colors[i % colors.length], opacity: 0.15 },
+      lineStyle: { color: colors[i % colors.length], width: 2 },
+      itemStyle: { color: colors[i % colors.length] },
+    }));
+    
+    return {
+      title: {
+        text: "区域多维度对比",
+        left: "center",
+        textStyle: { fontSize: 16, fontWeight: "bold" },
+      },
+      tooltip: {
+        formatter: (params: any) => {
+          const p = params;
+          let html = `<b>${p.seriesName}</b><br/>`;
+          indicators.forEach((ind, i) => {
+            html += `${ind.name}: ${ind.name === "订单量" ? Math.round(p.value[i]).toLocaleString() : `¥${p.value[i].toLocaleString()}`}<br/>`;
+          });
+          return html;
+        },
+      },
+      legend: {
+        data: regionData.slice(0, 7).map((r) => r.region),
+        bottom: 0,
+        type: "scroll",
+      },
+      radar: {
+        indicator: indicators,
+        shape: "circle",
+        radius: "65%",
+        center: ["50%", "50%"],
+        splitNumber: 4,
+        axisName: { color: "#666" },
+      },
+      series: [{
+        type: "radar",
+        data: seriesData,
+        symbol: "none",
+        lineStyle: { width: 2 },
+      }],
     };
   };
 
@@ -891,6 +1107,60 @@ export default function DashboardPage() {
               <ReactECharts
                 option={getCityRankingChartOption()}
                 style={{ height: "350px" }}
+                opts={{ renderer: "svg" }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 新增图表行 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 热力图 */}
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="w-5 h-5 text-primary" />
+                销售热力图
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReactECharts
+                option={getHeatmapChartOption()}
+                style={{ height: "400px" }}
+                opts={{ renderer: "svg" }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 堆叠面积图 */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <LineChart className="w-5 h-5 text-primary" />
+                品类销售趋势堆叠
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReactECharts
+                option={getStackedAreaChartOption()}
+                style={{ height: "400px" }}
+                opts={{ renderer: "svg" }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 雷达图 */}
+          <Card className="lg:col-span-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                区域多维度对比
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReactECharts
+                option={getRadarChartOption()}
+                style={{ height: "380px" }}
                 opts={{ renderer: "svg" }}
               />
             </CardContent>

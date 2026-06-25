@@ -435,8 +435,8 @@ class SalesDataGenerator:
             "end": (self.start_date + timedelta(days=self.days - 1)).strftime("%Y-%m-%d")
         }
     
-    def get_heatmap_data(self, start_date: str = None, end_date: str = None) -> List[Dict]:
-        """获取热力图数据（按日期+品类聚合）"""
+    def get_heatmap_data(self, start_date: str = None, end_date: str = None, region: str = None, category: str = None) -> List[Dict]:
+        """获取热力图数据（按日期+品类聚合，支持筛选）"""
         heatmap_map = {}
         
         for item in self.daily_data:
@@ -444,6 +444,14 @@ class SalesDataGenerator:
             if start_date and item["date"] < start_date:
                 continue
             if end_date and item["date"] > end_date:
+                continue
+            
+            # 区域过滤
+            if region and item["region"] != region:
+                continue
+            
+            # 品类过滤
+            if category and item["category"] != category:
                 continue
             
             key = f"{item['date']}_{item['category']}"
