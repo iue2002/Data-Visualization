@@ -652,7 +652,8 @@ export default function DashboardPage() {
       tooltip: {
         position: "top",
         formatter: (params: any) => {
-          return `${dates[params.value[0]]}<br/>${categories[params.value[1]]}<br/>销售额: ¥${(params.value[2] * 10000).toLocaleString()}`;
+          const val = params.value[2] * 10000;
+          return `${dates[params.value[0]]}<br/>${categories[params.value[1]]}<br/>销售额: ${formatMoney(val)}`;
         },
       },
       grid: {
@@ -735,7 +736,8 @@ export default function DashboardPage() {
         formatter: (params: any) => {
           let html = `<b>${params[0].axisValue}</b><br/>`;
           params.forEach((p: any) => {
-            html += `${p.marker} ${p.seriesName}: ¥${(p.value * 10000).toLocaleString()}<br/>`;
+            const val = (p.value * 10000);
+            html += `${p.marker} ${p.seriesName}: ${formatMoney(val)}<br/>`;
           });
           return html;
         },
@@ -798,7 +800,9 @@ export default function DashboardPage() {
           const p = params;
           let html = `<b>${p.seriesName}</b><br/>`;
           indicators.forEach((ind, i) => {
-            html += `${ind.name}: ${ind.name === "订单量" ? Math.round(p.value[i]).toLocaleString() : `¥${p.value[i].toLocaleString()}`}<br/>`;
+            const isCurrency = ind.name === "销售额" || ind.name === "利润";
+            const value = p.value[i];
+            html += `${ind.name}: ${isCurrency ? formatMoney(value) : formatNumber(Math.round(value))}<br/>`;
           });
           return html;
         },
