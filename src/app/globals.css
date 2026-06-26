@@ -135,3 +135,11 @@
   }
 }
 
+/* 隐藏 Next.js 开发指示器 */
+next-dev-indicator,
+[data-nextjs-dialog],
+#__next-build-indicator,
+#__next-prerender-indicator {
+  display: none !important;
+}
+
